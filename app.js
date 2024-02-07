@@ -115,4 +115,4 @@ app.post('/mint', async (req, res) => {
     }
 })
 
-app.listen(80, () => console.log('App is running on PORT:80'))
+app.listen(process.env.PORT, () => console.log('App is running on PORT:' + process.env.PORT))
