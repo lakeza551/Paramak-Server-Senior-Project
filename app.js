@@ -75,11 +75,11 @@ app.get('/thaid-redirect', async (req, res) => {
                 'Content-type': 'application/x-www-form-urlencoded',
                 'Authorization': `Basic ${base64Encoded}`
             },
-            body: {
+            body: JSON.stringify({
                 grant_type: 'authorization_code',
                 code: code,
                 redirect_uri: process.env.THAID_CALLBACK_ENDPOINT
-            }
+            })
         })
         console.log(await thaidRes.json())
         
