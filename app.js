@@ -65,8 +65,30 @@ app.get('/thaid-auth', (req, res) => {
     res.redirect(`https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/?response_type=code&client_id=${process.env.THAID_CLIENT_ID}&redirect_uri=${process.env.THAID_CALLBACK_ENDPOINT}&scope=pid&state=af0ifjsldkj`)
 })
 
-app.get('/thaid-redirect', (req, res) => {
-    console.log(req.query)
+app.get('/thaid-redirect', async (req, res) => {
+    const {code, state} = req.query
+    const base64Encoded = Buffer.from(process.env.CLIENT_ID + ':' + process.env.CLIENT_SECRET, 'base64')
+    try {
+        const thaidRes = await fetch('https://imauth.bora.dopa.go.th/api/v2/oauth2/token/', {
+            method: 'POST',
+            headers: {
+                'Content-type': 'application/x-www-form-urlencoded',
+                'Authorization': `Basic ${base64Encoded}`
+            },
+            body: {
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: process.env.THAID_CALLBACK_ENDPOINT
+            }
+        })
+        
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+app.post('/thaid-redirect', async (req, res) => {
+    console.log(req.body)
 })
 
 app.get('/patient_data/:patientId', async (req, res) => {
