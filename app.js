@@ -4,7 +4,7 @@ const { initializeApp } = require('firebase/app')
 const express = require('express')
 const cors = require('cors')
 const dotenv = require('dotenv')
-const bodyParser  = require('body-parser')
+const path = require('path')
 const ABI = require('./constants/ABI')
 const app = express()
 dotenv.config()
@@ -47,6 +47,11 @@ app.use(express.json({
     type: 'application/json'
 }))
 app.use(express.urlencoded({extended: false}))
+app.use('/static', express.static(path.join(__dirname, 'public')))
+
+app.get('/term-of-use', (req, res) => {
+    res.status(200).sendFile(path.join(__dirname, 'views', 'term-of-use.html'))
+})
 
 app.get('/token/:walletID', (req, res) => {
 
