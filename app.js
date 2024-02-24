@@ -49,16 +49,25 @@ app.use(express.json({
 app.use(express.urlencoded({extended: false}))
 app.use('/static', express.static(path.join(__dirname, 'public')))
 
-app.get('/term-of-use', (req, res) => {
-    res.status(200).sendFile(path.join(__dirname, 'views', 'term-of-use.html'))
-})
 
 app.get('/token/:walletID', (req, res) => {
-
+    
 })
 
 app.get('/', (req, res) => {
     res.status(200).send('Server is running normally.')
+})
+app.get('/term-of-use', (req, res) => {
+    res.status(200).sendFile(path.join(__dirname, 'views', 'term-of-use.html'))
+})
+
+app.get('thaid-auth', (req, res) => {
+    res.redirect(`https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/
+    ?response_type=code&
+    client_id=${process.env.THAID_CLIENT_ID}&
+    redirect_uri=${process.env.THAID_CALLBACK_ENDPOINT}&
+    scope=pid&
+    state=abc`)
 })
 
 app.get('/patient_data/:patientId', async (req, res) => {
