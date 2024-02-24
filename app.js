@@ -81,6 +81,7 @@ app.get('/thaid-redirect', async (req, res) => {
                 redirect_uri: process.env.THAID_CALLBACK_ENDPOINT
             }
         })
+        console.log(await thaidRes.json())
         
     } catch (error) {
         console.log(error)
