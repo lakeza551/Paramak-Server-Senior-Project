@@ -62,12 +62,7 @@ app.get('/term-of-use', (req, res) => {
 })
 
 app.get('/thaid-auth', (req, res) => {
-    res.redirect(`https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/
-    ?response_type=code&
-    client_id=${process.env.THAID_CLIENT_ID}&
-    redirect_uri=${process.env.THAID_CALLBACK_ENDPOINT}&
-    scope=pid&
-    state=abc`)
+    res.redirect(`https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/?response_type=code&client_id=${process.env.THAID_CLIENT_ID}&redirect_uri=${process.env.THAID_CALLBACK_ENDPOINT}&scope=pid&state=af0ifjsldkj`)
 })
 
 app.get('/patient_data/:patientId', async (req, res) => {
