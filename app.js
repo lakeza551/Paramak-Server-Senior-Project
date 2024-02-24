@@ -67,7 +67,7 @@ app.get('/thaid-auth', (req, res) => {
 
 app.get('/thaid-redirect', async (req, res) => {
     const {code, state} = req.query
-    const base64Encoded = Buffer.from(process.env.CLIENT_ID + ':' + process.env.CLIENT_SECRET).toString('base64')
+    const base64Encoded = btoa(process.env.CLIENT_ID + ':' + process.env.CLIENT_SECRET)
     try {
         const thaidRes = await fetch('https://imauth.bora.dopa.go.th/api/v2/oauth2/token/', {
             method: 'POST',
