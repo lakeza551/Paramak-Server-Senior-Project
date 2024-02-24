@@ -61,7 +61,7 @@ app.get('/term-of-use', (req, res) => {
     res.status(200).sendFile(path.join(__dirname, 'views', 'term-of-use.html'))
 })
 
-app.get('thaid-auth', (req, res) => {
+app.get('/thaid-auth', (req, res) => {
     res.redirect(`https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/
     ?response_type=code&
     client_id=${process.env.THAID_CLIENT_ID}&
