@@ -100,6 +100,7 @@ app.get('/thaid-redirect', async (req, res) => {
 app.get('/patient_data', async (req, res) => {
     const tokenString = req.query.token
     const token = jwt.verify(tokenString, process.env.JWT_SECRET_KEY)
+    console.log(token)
     const {pid} = token
     const snapshot = await get(ref(db, `patients/${pid}`))
     const patient = snapshot.val()
