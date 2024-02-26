@@ -56,7 +56,7 @@ app.get('/token/:walletID', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    res.redirect('/#')
+    res.status(200).send('Server is running normally.')
 })
 app.get('/term-of-use', (req, res) => {
     res.status(200).sendFile(path.join(__dirname, 'views', 'term-of-use.html'))
