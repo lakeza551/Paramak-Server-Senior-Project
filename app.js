@@ -98,6 +98,9 @@ app.get('/thaid-redirect', async (req, res) => {
 })
 
 app.get('/patient_data', async (req, res) => {
+    return res.status(200).json({
+        status: 'success'
+    })
     const tokenString = req.query.token
     const token = jwt.verify(tokenString, process.env.JWT_SECRET_KEY)
     const {pid} = token
