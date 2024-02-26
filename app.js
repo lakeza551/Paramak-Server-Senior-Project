@@ -119,6 +119,7 @@ app.get('/patient_data', async (req, res) => {
         const uri = await contract.tokenURI(id)
         data.push(JSON.parse(uri))
     }
+    console.log(data)
     return res.status(200).json({
         status: 'success',
         data: data
