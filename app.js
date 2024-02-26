@@ -48,6 +48,7 @@ app.use(express.json({
     type: 'application/json'
 }))
 app.use(express.urlencoded({extended: false}))
+app.use(express.static(path.join(__dirname, 'build')))
 app.use('/static', express.static(path.join(__dirname, 'public')))
 
 
@@ -56,7 +57,7 @@ app.get('/token/:walletID', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    res.status(200).send('Server is running normally.')
+    res.redirect('/#')
 })
 app.get('/term-of-use', (req, res) => {
     res.status(200).sendFile(path.join(__dirname, 'views', 'term-of-use.html'))
