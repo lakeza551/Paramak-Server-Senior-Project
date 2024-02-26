@@ -48,7 +48,6 @@ app.use(express.json({
     type: 'application/json'
 }))
 app.use(express.urlencoded({extended: false}))
-app.use(express.static(path.join(__dirname, 'build')))
 app.use('/static', express.static(path.join(__dirname, 'public')))
 
 
