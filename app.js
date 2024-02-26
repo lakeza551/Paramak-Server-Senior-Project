@@ -1,7 +1,8 @@
-const {ethers, Contract} = require('ethers')
-const { getDatabase, set, ref, get, query  } = require('firebase/database')
+const {ethers} = require('ethers')
+const { getDatabase, set, ref, get } = require('firebase/database')
 const { initializeApp } = require('firebase/app') 
 const express = require('express')
+const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const dotenv = require('dotenv')
 const path = require('path')
@@ -47,6 +48,7 @@ app.use(express.json({
     type: 'application/json'
 }))
 app.use(express.urlencoded({extended: false}))
+app.use(express.static(path.join(__dirname, 'build')))
 app.use('/static', express.static(path.join(__dirname, 'public')))
 
 
@@ -55,18 +57,19 @@ app.get('/token/:walletID', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    res.status(200).send('Server is running normally.')
+    res.redirect('/#')
 })
 app.get('/term-of-use', (req, res) => {
     res.status(200).sendFile(path.join(__dirname, 'views', 'term-of-use.html'))
 })
+
 
 app.get('/thaid-auth', (req, res) => {
     res.redirect(`https://imauth.bora.dopa.go.th/api/v2/oauth2/auth/?response_type=code&client_id=${process.env.THAID_CLIENT_ID}&redirect_uri=${process.env.THAID_CALLBACK_ENDPOINT}&scope=pid&state=af0ifjsldkj`)
 })
 
 app.get('/thaid-redirect', async (req, res) => {
-    const {code, state} = req.query
+    const {code} = req.query
     const base64Encoded = btoa(process.env.THAID_CLIENT_ID + ':' + process.env.THAID_CLIENT_SECRET)
     try {
         const thaidRes = await fetch('https://imauth.bora.dopa.go.th/api/v2/oauth2/token/', {
@@ -81,19 +84,24 @@ app.get('/thaid-redirect', async (req, res) => {
                 'redirect_uri': process.env.THAID_CALLBACK_ENDPOINT
             })
         })
-        console.log(await thaidRes.json())
-        
+        const { pid, access_token, refresh_token } = await thaidRes.json() 
+        const tokenString = jwt.sign({
+            pid: pid,
+            access_token: access_token,
+            refresh_token: refresh_token
+        }, process.env.JWT_SECRET_KEY)
+        res.redirect(`/#/record?token=${tokenString}`)
     } catch (error) {
         console.log(error)
+        res.send('<h1>Failed to authenticate.<h1>')
     }
 })
 
-app.post('/thaid-redirect', async (req, res) => {
-    console.log(req.body)
-})
-
-app.get('/patient_data/:patientId', async (req, res) => {
-    const snapshot = await get(ref(db, `patients/${req.params.patientId}`))
+app.get('/patient_data', async (req, res) => {
+    const tokenString = req.query.token
+    const token = jwt.verify(tokenString, process.env.JWT_SECRET_KEY)
+    const {pid} = token
+    const snapshot = await get(ref(db, `patients/${pid}`))
     const patient = snapshot.val()
     if(patient === null) {
         return res.status(400).json({
