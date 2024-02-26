@@ -115,16 +115,18 @@ app.get('/patient_data', async (req, res) => {
     const wallet = new ethers.Wallet(patient['walletPrivateKey'], provider)
     const contract = new ethers.Contract(CONTRACT_ID, ABI, wallet)
     const nftCount = await contract.balanceOf(wallet.address)
-    const data = []
+    const records = []
     for(var i = 0; i < nftCount; ++i) {
         const id = await contract.tokenOfOwnerByIndex(wallet.address, i)
         const uri = await contract.tokenURI(id)
-        data.push(JSON.parse(uri))
+        records.push(JSON.parse(uri))
     }
-    console.log(data)
     return res.status(200).json({
         status: 'success',
-        data: data
+        data: {
+            pid: pid,
+            records: records
+        }
     })
 })
 
