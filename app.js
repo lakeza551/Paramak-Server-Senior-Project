@@ -1,6 +1,7 @@
 const {ethers} = require('ethers')
 const { getDatabase, set, ref, get } = require('firebase/database')
 const { initializeApp } = require('firebase/app') 
+const moment = require('moment-timezone')
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
@@ -145,9 +146,8 @@ app.post('/mint', async (req, res) => {
         const provider = new ethers.JsonRpcProvider(RPC_PROVIDER_URL)
         const wallet = new ethers.Wallet(ADMIN_PRIVATE_KEY, provider)
         const contract = new ethers.Contract(CONTRACT_ID, ABI, wallet)
-        const date = new Date()
         await contract.safeMint(patient['walletAddress'], JSON.stringify({
-            date: date.toLocaleDateString() + " " + date.toLocaleTimeString(),
+            date: moment().tz('Asia/Bangkok').format('DD/MM/YYYY'),
             ...req.body.data
         }))
         res.status(200).json({
