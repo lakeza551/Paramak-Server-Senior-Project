@@ -99,11 +99,13 @@ app.get('/thaid-redirect', async (req, res) => {
 })
 
 app.get('/patient_data', async (req, res) => {
+    console.log('Query Data')
     const tokenString = req.query.token
     const token = jwt.verify(tokenString, process.env.JWT_SECRET_KEY)
-    console.log(token)
     const {pid} = token
+    console.time('firebase')
     const snapshot = await get(ref(db, `patients/${pid}`))
+    console.timeEnd('firebase')
     const patient = snapshot.val()
     if(patient === null) {
         return res.status(400).json({
@@ -111,6 +113,7 @@ app.get('/patient_data', async (req, res) => {
             message: 'Patient ID not found.'
         })
     }
+    console.time('blockchain')
     const provider = new ethers.JsonRpcProvider(RPC_PROVIDER_URL)
     const wallet = new ethers.Wallet(patient['walletPrivateKey'], provider)
     const contract = new ethers.Contract(CONTRACT_ID, ABI, wallet)
@@ -121,6 +124,7 @@ app.get('/patient_data', async (req, res) => {
         const uri = await contract.tokenURI(id)
         records.push(JSON.parse(uri))
     }
+    console.timeEnd('blockchain')
     return res.status(200).json({
         status: 'success',
         data: {
@@ -131,8 +135,11 @@ app.get('/patient_data', async (req, res) => {
 })
 
 app.post('/mint', async (req, res) => {
+    console.log('Mint')
     try {
+        console.time('firebase')
         const snapshot = await get(ref(db, `patients/${req.body.id}`))
+        console.timeEnd('firebase')
         var patient = snapshot.val()
         if(patient === null) {
             const wallet = ethers.Wallet.createRandom()
@@ -145,6 +152,7 @@ app.post('/mint', async (req, res) => {
                 'walletPrivateKey': wallet.privateKey
             }
         }
+        console.time('blockchain')
         const provider = new ethers.JsonRpcProvider(RPC_PROVIDER_URL)
         const wallet = new ethers.Wallet(ADMIN_PRIVATE_KEY, provider)
         const contract = new ethers.Contract(CONTRACT_ID, ABI, wallet)
@@ -152,6 +160,7 @@ app.post('/mint', async (req, res) => {
             date: moment().tz('Asia/Bangkok').format('DD/MM/YYYY'),
             ...req.body.data
         }))
+        console.timeEnd('blockchain')
         res.status(200).json({
             status: 'success'
         })
