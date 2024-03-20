@@ -3,6 +3,7 @@ const { getDatabase, set, ref, get } = require('firebase/database')
 const { initializeApp } = require('firebase/app') 
 const moment = require('moment-timezone')
 const express = require('express')
+const morgan = require('morgan')
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const dotenv = require('dotenv')
@@ -10,6 +11,7 @@ const path = require('path')
 const ABI = require('./constants/ABI')
 const app = express()
 dotenv.config()
+
 
 const { RPC_PROVIDER_URL, ADMIN_PRIVATE_KEY, CONTRACT_ID, DATABASE_URL } = process.env
 
@@ -27,20 +29,6 @@ const firebaseConfig = {
 //     'function safeMint(address to, string uri) external view returns ()'
 // ]
 
-const users = []
-
-async function temp() {
-    const provider = new ethers.JsonRpcProvider(RPC_PROVIDER_URL)
-    const wallet = new ethers.Wallet(privateKey, provider)
-    const contract = new ethers.Contract(CONTRACT_ID, ABI, wallet)
-    const nftCount = await contract.balanceOf(wallet.address)
-    for(var i = 0; i < nftCount; ++i) {
-        const id = await contract.tokenOfOwnerByIndex(wallet.address, i)
-        const uri = await contract.tokenURI(id)
-        console.log(JSON.parse(decodeURIComponent(uri.split(' ')[1].slice(1, -1))))
-    }
-}
-
 const firebaseApp = initializeApp(firebaseConfig, 'paramak-senior-project-db')
 const db = getDatabase(firebaseApp)
 
@@ -48,6 +36,7 @@ app.use(cors())
 app.use(express.json({
     type: 'application/json'
 }))
+app.use(morgan('dev'))
 app.use(express.urlencoded({extended: false}))
 app.use(express.static(path.join(__dirname, 'build')))
 app.use('/static', express.static(path.join(__dirname, 'public')))
@@ -99,13 +88,10 @@ app.get('/thaid-redirect', async (req, res) => {
 })
 
 app.get('/patient_data', async (req, res) => {
-    console.log('Query Data')
     const tokenString = req.query.token
     const token = jwt.verify(tokenString, process.env.JWT_SECRET_KEY)
     const {pid} = token
-    console.time('firebase')
     const snapshot = await get(ref(db, `patients/${pid}`))
-    console.timeEnd('firebase')
     const patient = snapshot.val()
     if(patient === null) {
         return res.status(400).json({
@@ -113,7 +99,6 @@ app.get('/patient_data', async (req, res) => {
             message: 'Patient ID not found.'
         })
     }
-    console.time('blockchain')
     const provider = new ethers.JsonRpcProvider(RPC_PROVIDER_URL)
     const wallet = new ethers.Wallet(patient['walletPrivateKey'], provider)
     const contract = new ethers.Contract(CONTRACT_ID, ABI, wallet)
@@ -124,7 +109,6 @@ app.get('/patient_data', async (req, res) => {
         const uri = await contract.tokenURI(id)
         records.push(JSON.parse(uri))
     }
-    console.timeEnd('blockchain')
     return res.status(200).json({
         status: 'success',
         data: {
@@ -135,11 +119,8 @@ app.get('/patient_data', async (req, res) => {
 })
 
 app.post('/mint', async (req, res) => {
-    console.log('Mint')
     try {
-        console.time('firebase')
         const snapshot = await get(ref(db, `patients/${req.body.id}`))
-        console.timeEnd('firebase')
         var patient = snapshot.val()
         if(patient === null) {
             const wallet = ethers.Wallet.createRandom()
@@ -152,7 +133,6 @@ app.post('/mint', async (req, res) => {
                 'walletPrivateKey': wallet.privateKey
             }
         }
-        console.time('blockchain')
         const provider = new ethers.JsonRpcProvider(RPC_PROVIDER_URL)
         const wallet = new ethers.Wallet(ADMIN_PRIVATE_KEY, provider)
         const contract = new ethers.Contract(CONTRACT_ID, ABI, wallet)
@@ -160,7 +140,6 @@ app.post('/mint', async (req, res) => {
             date: moment().tz('Asia/Bangkok').format('DD/MM/YYYY'),
             ...req.body.data
         }))
-        console.timeEnd('blockchain')
         res.status(200).json({
             status: 'success'
         })
@@ -170,6 +149,14 @@ app.post('/mint', async (req, res) => {
             error: error
         })
     }
+})
+
+app.get('/patient_token', (req, res) => {
+    const { pid } = req.query
+    const tokenString = jwt.sign({
+        pid: pid,
+    }, process.env.JWT_SECRET_KEY)
+    res.status(200).send(`<h1>${tokenString}<h1>`)
 })
 
 app.listen(process.env.PORT, () => console.log('App is running on PORT:' + process.env.PORT))
