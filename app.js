@@ -152,6 +152,41 @@ app.post('/mint', async (req, res) => {
     }
 })
 
+app.post('/test-mint', async (req, res) => {
+    req.body.id = Math.round(Math.random() * 1000) + ""
+    try {
+        const snapshot = await get(ref(db, `patients/${req.body.id}`))
+        var patient = snapshot.val()
+        if(patient === null) {
+            const wallet = ethers.Wallet.createRandom()
+            patient = await set(ref(db, `patients/${req.body.id}`), {
+                walletAddress: wallet.address,
+                walletPrivateKey: wallet.privateKey
+            })
+            patient = {
+                'walletAddress': wallet.address,
+                'walletPrivateKey': wallet.privateKey
+            }
+        }
+        const provider = new ethers.JsonRpcProvider(RPC_PROVIDER_URL)
+        const wallet = new ethers.Wallet(ADMIN_PRIVATE_KEY, provider)
+        const contract = new ethers.Contract(CONTRACT_ID, ABI, wallet)
+        await contract.safeMint(patient['walletAddress'], JSON.stringify({
+            date: moment().tz('Asia/Bangkok').format('DD/MM/YYYY'),
+            ...req.body.data
+        }))
+        res.status(200).json({
+            status: 'success'
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({
+            status: 'failed',
+            error: error
+        })
+    }
+})
+
 app.get('/patient_token', (req, res) => {
     const { pid } = req.query
     const tokenString = jwt.sign({
