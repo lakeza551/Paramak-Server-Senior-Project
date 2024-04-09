@@ -139,7 +139,7 @@ app.post('/mint', async (req, res) => {
         await contract.safeMint(patient['walletAddress'], JSON.stringify({
             date: moment().tz('Asia/Bangkok').format('DD/MM/YYYY'),
             ...req.body.data
-        }), 'pending')
+        }))
         res.status(200).json({
             status: 'success'
         })
