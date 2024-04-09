@@ -144,6 +144,7 @@ app.post('/mint', async (req, res) => {
             status: 'success'
         })
     } catch (error) {
+        console.log(error)
         res.status(400).json({
             status: 'failed',
             error: error
